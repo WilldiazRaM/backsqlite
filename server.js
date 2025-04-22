@@ -1,5 +1,7 @@
 // Importa el módulo Express
 const express = require('express');
+//IMPORTA EL MODULO CORS
+const cors = require('cors');
 // Crea una instancia de la aplicación Express
 const app = express();
 
@@ -13,6 +15,8 @@ const morgan = require('morgan');
 // Middleware para registrar en consola las peticiones HTTP (modo 'dev')
 app.use(morgan('dev'));
 
+//Midleware para inciializar CORS
+app.use(cors());
 
 // Middleware para parsear cuerpos JSON en las solicitudes
 app.use(express.json());
@@ -56,6 +60,14 @@ app.get('/usuarios', (req, res, next) => {
         // Devuelve la lista de usuarios en formato JSON
         res.json(rows);
     });
+});
+
+//RUTA PARA VER TODOS USUARIOS REGISTRADOS:
+app.get('/debug/usuarios', (req, res, next) => {
+  db.all('SELECT * FROM usuarios', (err, rows) => {
+    if (err) return next(err);
+    res.json(rows);
+  });
 });
 
 
