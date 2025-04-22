@@ -1,4 +1,4 @@
-// database.js
+// CONEXIÓN Y CREACIÓN BASE DE DATOS SQLITE:
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
