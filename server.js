@@ -29,10 +29,10 @@ app.get('/', (req, res) => {
 // Ruta para crear un nuevo usuario (POST /usuarios)
 app.post('/usuarios', (req, res, next) => {
     // Extrae los datos del cuerpo de la solicitud
-    const { nombre, correo, contraseña } = req.body;
+    const { nombre, correo, contrasena } = req.body;
 
     // Valida que no falten campos obligatorios
-    if (!nombre || !correo || !contraseña) {
+    if (!nombre || !correo || !contrasena) {
         return res.status(400).json({ success: false, message: 'Faltan campos' });
     }
 
@@ -40,7 +40,7 @@ app.post('/usuarios', (req, res, next) => {
     const query = `INSERT INTO usuarios (nombre, correo, contraseña) VALUES (?, ?, ?)`;
 
     // Ejecuta la consulta usando parámetros seguros
-    db.run(query, [nombre, correo, contraseña], function (err) {
+    db.run(query, [nombre, correo, contrasena], function (err) {
         if (err) return next(err); // Pasa el error al middleware de manejo de errores
         // Responde con los datos del nuevo usuario creado
         res.json({ success: true, id: this.lastID, nombre, correo });
