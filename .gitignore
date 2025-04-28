@@ -1,3 +1,6 @@
+#IGNORAR BASE DATOS
+Config/database.sqlite
+
 # Logs
 logs
 *.log
