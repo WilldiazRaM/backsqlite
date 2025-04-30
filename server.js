@@ -43,7 +43,7 @@ app.post('/usuarios', (req, res, next) => {
     }
 
     // Consulta SQL para insertar un nuevo usuario
-    const query = `INSERT INTO usuarios (nombre, correo, contrasena) VALUES (?, ?, ?)`;
+    const query = 'INSERT INTO usuarios (nombre, correo, contrasena) VALUES (?, ?, ?)';
 
     // Ejecuta la consulta con valores seguros (evita inyección SQL)
     db.run(query, [nombre, correo, contrasena], function (err) {
@@ -60,7 +60,7 @@ app.post('/usuarios', (req, res, next) => {
         }
 
         // Si el usuario se crea correctamente, responde con sus datos (sin la contraseña por seguridad)
-        res.json({
+        res.status(201).json({
             success: true,
             id: this.lastID,
             nombre,
@@ -75,6 +75,95 @@ app.get('/usuarios', (req, res, next) => {
     db.all('SELECT id, nombre, correo FROM usuarios', (err, rows) => {
         if (err) return next(err); // En caso de error, lo pasa al middleware de errores
         res.json(rows); // Devuelve los usuarios como JSON
+    });
+});
+
+// Ruta para obtener un usuario específico por ID: GET /usuarios/:id
+app.get('/usuarios/:id', (req, res, next) => {
+    const { id } = req.params;
+    
+    db.get('SELECT id, nombre, correo FROM usuarios WHERE id = ?', [id], (err, row) => {
+        if (err) return next(err);
+        
+        if (!row) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        res.json(row);
+    });
+});
+
+// Ruta para actualizar un usuario: PUT /usuarios/:id
+app.put('/usuarios/:id', (req, res, next) => {
+    const { id } = req.params;
+    const { nombre, correo, contrasena } = req.body;
+    
+    // Validación básica
+    if (!nombre || !correo) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Nombre y correo son campos obligatorios' 
+        });
+    }
+    
+    // Consulta SQL para actualizar (con contraseña opcional)
+    let query, params;
+    if (contrasena) {
+        query = 'UPDATE usuarios SET nombre = ?, correo = ?, contrasena = ? WHERE id = ?';
+        params = [nombre, correo, contrasena, id];
+    } else {
+        query = 'UPDATE usuarios SET nombre = ?, correo = ? WHERE id = ?';
+        params = [nombre, correo, id];
+    }
+    
+    db.run(query, params, function(err) {
+        if (err) {
+            if (err.message.includes('UNIQUE constraint failed: usuarios.correo')) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'El correo ya está registrado por otro usuario'
+                });
+            }
+            return next(err);
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Usuario actualizado correctamente',
+            changes: this.changes
+        });
+    });
+});
+
+// Ruta para eliminar un usuario: DELETE /usuarios/:id
+app.delete('/usuarios/:id', (req, res, next) => {
+    const { id } = req.params;
+    
+    db.run('DELETE FROM usuarios WHERE id = ?', [id], function(err) {
+        if (err) return next(err);
+        
+        if (this.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Usuario eliminado correctamente',
+            changes: this.changes
+        });
     });
 });
 
